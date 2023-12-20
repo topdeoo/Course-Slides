@@ -1,4 +1,4 @@
-#import "../template.typ": *
+#import "../theme/iTalk.typ": *
 
 #show: nenu-theme.with(
   short-title: "PyTorch",
