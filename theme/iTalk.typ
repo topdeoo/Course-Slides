@@ -72,7 +72,7 @@
         column-gutter: 1em,
         row-gutter: 1em,
         ..authors.map(author => text(fill: black)[#author.name\
-        #author.email])
+        #link("mailto: " + author.email)])
       )
       v(1em)
       if institution != none {

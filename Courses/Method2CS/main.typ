@@ -31,7 +31,7 @@
 
 #title-slide(
   title: "A Diving Odyssey through PyTorch",
-  authors: (name: "Virgil", email: "virgiling7@gmail.com"),
+  authors: (name: "凌典", email: "virgiling7@gmail.com"),
   logo: image("fig/nenu-logo-title.png", width: 30%),
   institution: "Northeast Normal University",
   date: "2023-12-19"
@@ -100,17 +100,28 @@
   ]
 
   #only(2)[
-    #figure(
-      image("fig/ML-compiler.png", width: 60%),
-       caption: "ML Compiler"
-    )
-  ]
-
-  #only((beginning: 3, until: 5))[
-    #image("fig/ML-compiler.png")
+    In traditional compiler, we can define an IR to describe the computation process.
+    
+    What about ML Compiler?
   ]
 
   #only(3)[
+    // #figure(
+    //   image("fig/ML-compiler.png", width: 60%),
+    //    caption: "ML Compiler"
+    // )
+      #figure(
+        image("fig/ComputationGraph-example.png", width: 80%),
+        caption: "Computation Graph"
+      )
+      Here is a computation graph, which computes $d = (a * w_1 + w_2) * (a * w_1)$
+  ]
+
+  #only((beginning: 4, until: 6))[
+    #image("fig/ML-compiler.png")
+  ]
+
+  #only(4)[
       #simple-arrow(
       fill: red,
       stroke: 0pt,
@@ -126,7 +137,7 @@
       language]
     ]
 
-  #only(4)[
+  #only(5)[
       #simple-arrow(
       fill: red,
       stroke: 0pt,
@@ -141,7 +152,7 @@
     #text(fill: red)[a.k.a computation graph]
   ]
 
-  #only(5)[
+  #only(6)[
       #simple-arrow(
       fill: red,
       stroke: 0pt,
@@ -177,25 +188,19 @@
 ]
 
 #slide(
-  session: "Before Started",
-  title: "Computation Graph" 
-)[
-  #figure(
-    image("fig/ComputationGraph-example.png", width: 80%),
-    caption: "Computation Graph"
-  )
-  Here is a computation graph, which computes $d = (a * w_1 + w_2) * (a * w_1)$
-]
-
-#slide(
   session: "Front End",
   title: "FX Graph"
 )[
-    #only((until: 2))[
+    #only((until: 1))[
+      As we have seen, PyTorch use a graph to describe the computation process, which is called `Computation Graph`
+
+      But how does PyTorch describe the computation graph and how does it caputure the graph?
+    ]
+    #only(2)[
       Before PyTorch 2.0, PyTorch use FX Graph to represent the computation graph, example code:
     ]
     
-    #only((until: 2))[
+    #only(2)[
         #grid(
         columns: (100%),
         rows: (5fr, 10fr)
@@ -219,20 +224,32 @@
         ]
       ]
     ]
-    // #only(3)[
-    //   But when we have a control flow like this:
-    //   ```python
-    //   def conditional_computation(x):
-    //     if x.sum() < 0:
-    //         return x + 1
-    //     else:
-    //         return x - 1
-    //   ```
-    //   We can not capture the control flow in FX Graph
-      
-    //   Because FX Graph is a `symbolic trace`, i.e. it will not do any computation, just record the computation
+]
 
-    // ]
+#slide(
+  session: "Front End",
+  title: "How to capture the graph"
+)[
+  #only(1)[
+      #set align(center + horizon)
+      #text(size: 1.5em)[
+        We use a front end module called #pin(3) `dynamo` #pin(4) to capture the Computation Graph.
+
+        #pinit-highlight(3, 4)
+        ]
+      // #image("fig/dynamo_.png", fit: "contain", width: 80%, height: 85%)
+      
+  ]
+  // #only(2)[
+  //   #set align(center + horizon)
+  //   #text(size: 1.5em)[
+  //     Before we diving into it
+      
+  //     we need to know some basic concepts
+  //   ]
+  //   + How does Python execute
+  //   + What is Frame
+  // ]
 ]
 
 #slide(
@@ -320,137 +337,508 @@
   ]
 ]
 
-#slide(
-  session: "CPython",
-  title: "Frame and Frame Evaluation"
-)[
-  #only(1)[
-    A `Frame` is a bit different from `Stack Frame` in C, it is a data structure to store the local variables and some other information.
 
-    We can describe a `Frame` like this:
-    #grid(
-      columns: (70%, 30%),
-      image("fig/CPython-Frame-example.png", width: 80%, height: 60%, fit: "contain"),
-      text[
-        The call stack of a function is essentially the process of recursively creating #highlight[`Frame`] and executing them.
-      ]
-    )
-  ]
+// #slide(
+//   session: "CPython",
+//   title: "Frame and Frame Evaluation"
+// )[
+//   #only(1)[
+//     A `Frame` is a bit different from `Stack Frame` in C, it is a data structure to store the local variables and some other information.
 
-  #only((2, 3))[
-    #grid(
-      columns: (80%, 20%),
-      text[
-        ```py
-      def foo():
-          frame = inspect.currentframe()
-          cur_func_frame = frame
-          print(f'code name of current frame is {cur_func_name.f_code.co_name}')
-          prev_func_frame = frame.f_back
-          print(f'current code name of previous frame is {prev_func_frame.f_code.co_name}')
+//     We can describe a `Frame` like this:
+//     #grid(
+//       columns: (70%, 30%),
+//       image("fig/CPython-Frame-example.png", width: 80%, height: 60%, fit: "contain"),
+//       text[
+//         The call stack of a function is essentially the process of recursively creating #highlight[`Frame`] and executing them.
+//       ]
+//     )
+//   ]
 
-      def bar(a=1):
-          foo()
+//   #only((2, 3))[
+//     #grid(
+//       columns: (80%, 20%),
+//       text[
+//         ```py
+//       def foo():
+//           frame = inspect.currentframe()
+//           cur_func_frame = frame
+//           print(f'code name of current frame is {cur_func_name.f_code.co_name}')
+//           prev_func_frame = frame.f_back
+//           print(f'current code name of previous frame is {prev_func_frame.f_code.co_name}')
 
-      if __name__ == '__main__':
-          bar()
-        ```
-      ],
-      text[
-        #only(2)[#highlight(fill: rgb("#f2a1cc"))[result is: ]]
+//       def bar(a=1):
+//           foo()
 
-        code name of current frame is #highlight[foo] 
+//       if __name__ == '__main__':
+//           bar()
+//         ```
+//       ],
+//       text[
+//         #only(2)[#highlight(fill: rgb("#f2a1cc"))[result is: ]]
 
-        current code name of previous frame is #highlight[bar]
+//         code name of current frame is #highlight[foo] 
 
-        #only(3)[
-          so we can get all previous frame info in current frame
-        ]
-      ]
-    )
-  ]
+//         current code name of previous frame is #highlight[bar]
 
-  #only((4, 5))[
-    #set align(center + horizon)
-    #text(size: 1.5em)[
-      How about stealing the future?
-    ]
+//         #only(3)[
+//           so we can get all previous frame info in current frame
+//         ]
+//       ]
+//     )
+//   ]
 
-    #set align(left + horizon)
-    If we know the function frame before we execute it, then we can do some awesome things to the frame, like:
-    #v(.5em)
-    - inject some code into the frame
-    - changing the execution order of the code
-    - etc.
+//   #only((4, 5))[
+//     #set align(center + horizon)
+//     #text(size: 1.5em)[
+//       How about stealing the future?
+//     ]
+
+//     #set align(left + horizon)
+//     If we know the function frame before we execute it, then we can do some awesome things to the frame, like:
+//     #v(.5em)
+//     - inject some code into the frame
+//     - changing the execution order of the code
+//     - etc.
     
-  ]
-  #only(5)[
-    #set align(center + horizon)
-    #text(size: 1.2em)[
-      Python Enhancement Proposal 523 (PEP 523) is a proposal to add a new API to the Python interpreter to allow #strong[stealing the future].
-    ]
-  ]
+//   ]
+//   #only(5)[
+//     #set align(center + horizon)
+//     #text(size: 1.2em)[
+//       Python Enhancement Proposal 523 (PEP 523) is a proposal to add a new API to the Python interpreter to allow #strong[stealing the future].
+//     ]
+//   ]
 
-]
+// ]
 
-#focus-slide()[
-    #set align(center + horizon)
-    So, what does dynamo do?
-]
+// #focus-slide()[
+//     #set align(center + horizon)
+//     So, what does dynamo do?
+// ]
 
-#slide(
-  session: "Front End",
-  title: "Frame Evaluation"
-)[
-  #only(1)[
-    #set align(center + horizon)
-    #image("fig/PEP-523.png", fit: "stretch")
-  ]
+// #slide(
+//   session: "Front End",
+//   title: "Frame Evaluation"
+// )[
+//   #only(1)[
+//     #set align(center + horizon)
+//     #image("fig/PEP-523.png", fit: "stretch")
+//   ]
 
-  #only((2, 3))[
-    #grid(
-      columns: (40%, 60%),
-      column-gutter: 3em,
-      image("fig/PEP-523-dynamo.png", width: 120%, fit: "stretch"),
-      text[
-        `dynamo` change the `_PyEval_EvalFrameDefault` function to its self-defined function 
+//   #only((2, 3))[
+//     #grid(
+//       columns: (40%, 60%),
+//       column-gutter: 3em,
+//       image("fig/PEP-523-dynamo.png", width: 120%, fit: "stretch"),
+//       text[
+//         `dynamo` change the `_PyEval_EvalFrameDefault` function to its self-defined function 
 
-        `dynamo` makes a clever choice by performing bytecode parsing at the Python layer and \
-        passing it as a callback function to a frame evaluation function.
+//         `dynamo` makes a clever choice by performing bytecode parsing at the Python layer and \
+//         passing it as a callback function to a frame evaluation function.
         
-        #only(3)[
-          When we invoke `optimizer('inductor')(fn)`, `dynamo` replaces the frame evaluation function \
-          of `fn` with its own custom one, and passes the callback function as an argument.
-        ]
-      ]
-    )
-  ]
-]
+//         #only(3)[
+//           When we invoke `optimizer('inductor')(fn)`, `dynamo` replaces the frame evaluation function \
+//           of `fn` with its own custom one, and passes the callback function as an argument.
+//         ]
+//       ]
+//     )
+//   ]
+// ]
 
 #slide(
   session: "Front End",
   title: "Captures Computation Graph"
 )[
-  
-]
 
-#slide(
-  session: "Front End",
-  title: "JIT Compile"
-)[
   #only(1)[
     #set align(center + horizon)
-    #text(size: 1.5em)[
+    #text(size: 1.2em)[
       `dynamo` captures the computation graph by #strong[stealing the future]
 
-      But how does it 
+      But we will not discuss the details of this, we only care about that `dynamo` captures the computation graph before executing into bytecode.
     ]
   ]
 
   #only(2)[
-    #set align(center + horizon)
-    #text(size: 1.5em)[
+    #text(size: 1.2em)[
+      Still remember FX Graph?
+    ]
+
+    In general, we could simply map each statement to a node in the graph like this:
+    #grid(
+      columns: 2,
+      column-gutter: 3mm,
+    text[
+      ```py
+    def forward(self, x):
+      return self.linear(
+        x + self.param
+      ).clamp(min=0.0, max=1.0)
+    ```],
+    image("fig/FX_Graph_example.png", fit: "contain")
+    )
+
+    But it is not enough, we need to capture the control flow, like `if` statement.
+  ]
+
+  #only((3, 4))[
+    Let us see a example, when we have a control flow like this:
+      ```python
+      def forward(self, x):
+        if x.sum() < 0:
+            return x + 1
+        else:
+            return x - 1
+      ```
+      We can not capture the control flow in FX Graph
       
+      Because FX Graph is a `symbolic trace`, i.e. it will not do any computation, just record the computation.
+
+    ]
+
+    #only(4)[
+      Then what does `dynamo` do?
+    ]
+
+    #only((5, 6))[
+      Let's see:
+      #grid(
+       columns: 2,
+       column-gutter: 5em,
+       text[
+        ```python
+        def forward(x):
+          if x.sum() < 0:
+              return x + 1
+          else:
+              return x - 1
+        ```
+        ],
+        grid(
+          columns: 1,
+          rows: 2,
+          row-gutter: 2em,
+          rect[
+            #only((5, 6))[
+              ```py
+              def forward(self, x: torch.Tensor):
+                sum_1 = x.sum(); x = None
+                lt = sum_1 < 0; sum_1 = None
+                return (lt, )
+              ```
+            ]
+          ],
+          rect[
+            #only((5, 6))[
+              ```py
+              def forward(self, x: torch.Tensor):
+                add = x + 1; x = None
+                return (add, )
+              ```
+            ]
+          ]
+        )
+      )
+      #only(6)[
+        #text(size: 1.2em)[
+          ...wait, Why there are only 2 computation graph?\
+          Where is the `else` branch?
+        ]
+      ]
+    ]
+]
+
+#slide(
+  session: "Front End",
+  title: "Guard"
+)[
+
+  #only(1)[
+    What is Guard?
+    
+    As we have said, PyTorch is #pin(1)JIT#pin(2) compiler.
+    
+    #pinit-highlight(1, 2)
+
+    It means PyTorch will #pin(5)compile the code when it is running#pin(6).
+
+    #pinit-highlight(5, 6)
+
+    But we do not want to compile the code every time we run it.
+    
+    So we need to #pin(3)guard the code#pin(4), dynamically compile the code when it is running for the first time, and cache the compiled code for later use.
+
+    #pinit-highlight(3, 4)
+
+  ]
+
+  #only((beginning: 2, until: 4))[
+    #grid(
+      columns: (45%, 55%),
+      column-gutter: 3mm,
+      text[
+        ```py
+        class MyModule(nn.Module):
+          def __init__():
+            super().__init__()
+            self.linear = torch.nn.Linear(4, 5)
+
+          def forward(self, x):
+            return self.linear( \
+            x + self.param \
+            ).clamp(min=0.0, max=1.0)
+        ```
+      ],
+      [
+        #only(2)[
+          We need `Guard` to guard the computation graph in case of recompiling the code every time we run it.
+        ]
+        #only(3)[
+          ```py
+          local 'self' NN_MODULE
+          {
+              'guard_types': ['ID_MATCH'],
+              'code': ['___check_obj_id(self, 140260021010384)'],
+              'obj_weakref': <weakref at 0x7f8f9864a110; to 'Model' at 0x7f90d4ba7fd0>
+              'guarded_class': <weakref at 0x7f90d4bc71a0; to 'type' at 0x705e0f0 (Model)>
+          }
+          ```
+        ]
+        #only(4)[
+          ```py
+          local 'x' TENSOR_MATCH
+          {
+              'guard_types': ['TENSOR_MATCH'],
+              'code': None,
+              'obj_weakref': <weakref at 0x7f9035c8bce0; to 'Tensor' at 0x7f8f95bddd00>
+              'guarded_class': <weakref at 0x7f8f98cf9440; to 'torch._C._TensorMeta' at 0x57f3e10 (Tensor)>
+          }
+          ```
+        ]
+      ]
+    )
+  ]
+
+  #only((beginning: 5, until: 7))[
+    #grid(
+      columns: (55%, 45%),
+      [
+        #only((beginning: 5, until: 7))[
+          ```py
+          local 'x' TENSOR_MATCH
+          {
+              'guard_types': ['TENSOR_MATCH'],
+              'code': None,
+              'obj_weakref': <weakref at 0x7f9035c8bce0; to 'Tensor' at 0x7f8f95bddd00>
+              'guarded_class': <weakref at 0x7f8f98cf9440; to 'torch._C._TensorMeta' at 0x57f3e10 (Tensor)>
+          }
+          ```
+        ]
+      ],
+      [
+        #only((5, 6))[
+          The `Guard` has few ways to check a variable have changed or not.
+        ]
+        #only(6)[
+          + `check_obj_id`: i.e. `ID_MATCH`
+          + `check_tensor`: i.e. `TENSOR_MATCH`
+        ]
+        #only(7)[
+          When check `Tensor`, `Guard` will check the `Tensor`'s: 
+          1. `dtype`: `fp32` to `fp16`, etc.
+          2. `device`: `GPU0` to `GPU1`, etc.
+          3. `shape`: `(1, 2)` to `(2, 1)`, etc.
+          4. `requires_grad`: `True` to `False`, etc.
+          5. `alignment`: `32` to `64`, etc.
+
+          It will re-compile when all check failed.
+        ]
+      ]
+    )
+  ]
+]
+
+#slide(
+  session: "Front End",
+  title: "Graph Break"
+)[
+
+  #only(1)[
+    #grid(
+      columns: 2,
+      column-gutter: 10mm,
+      text[
+      ```python
+      def forward(self, x):
+        if x.sum() < 0:
+            return x + 1
+        else:
+            return x - 1
+      ```
+    ],
+    text[
+      With `Guard`, `dynamo` can guarantee that if the tensor does not change, the computation graph will not change, so we do not need to compiler the `else` branch.
+
+
+      But... what if the tensor changes?
+    ]
+    ),
+  ]
+
+  #only(2)[
+    let's see this example:
+  ]
+
+  #only((beginning:2, until: 7))[
+    #grid(
+     columns: 2,
+    column-gutter: 12mm,
+     [
+      #only((2, 3))[
+        ```py
+        def toy_example(x):
+          a = nn.Linear(1, 1)(x)
+          b = nn.Linear(1, 1)(x)
+          if x.sum() < 0:
+              return a + b
+          return a - b
+        ```
+      ]
+      #only((4, 5, 6, 7))[
+        ```py
+        def compiled_toy_example(x):
+          a, b, lt = __compiled_fn_0(x)
+          if lt:
+              return __resume_at_30_1(b, x)
+          else:
+              return __resume_at_38_2(a, x)
+        ```
+      ]
+     ],
+     [
+      #only(2)[
+        `dynamo` here take an action called `Graph Break`
+
+        `toy_example()` would be compiled into 3 computation graph.
+      ]
+      #only(3)[
+        ```py
+        def compiled_toy_example(x):
+          a, b, lt = __compiled_fn_0(x)
+          if lt:
+              return __resume_at_30_1(b, x)
+          else:
+              return __resume_at_38_2(a, x)
+        ```
+        three function shows below:
+      ]
+      #only(4)[
+        before `if` statement:
+
+        ```py
+        def __compiled_fn_0(x):
+          a, b = nn.Linear(1, 1)(x), nn.Linear(1, 1)(x)
+          return x.sum() < 0:
+        ```
+      ]
+      #only(5)[
+        `if` branch:
+
+        ```py
+        def __resume_at_30_1(x):
+          goto if_next
+          a, b = nn.Linear(1, 1)(x), nn.Linear(1, 1)(x)
+          if x.sum() < 0:
+              label if_next
+              return a + b
+          return a - b
+        ```
+      ]
+      #only(6)[
+        `else` branch:
+
+        ```py
+        def __resume_at_38_2(x):
+          goto if_jump
+          a, b = nn.Linear(1, 1)(x), nn.Linear(1, 1)(x)
+          if x.sum() < 0:
+              b = a + b
+          label if_jump
+          return a - b
+        ```
+      ]
+      #only(7)[
+        At first, the function `__compiled_fn()` will be compiled, and we have the `lt` flag
+
+        Then `dynamo` will compile the `if` branch #pin(1)*or*#pin(2) `else` branch according to the `lt` flag.
+
+        #pinit-highlight(1, 2)
+      ]
+     ]
+    )
+  ]
+]
+
+#slide(
+  session: "Front End",
+  title: "Loop Unrolling"
+)[
+
+  #only(1)[
+    #set align(center + horizon)
+    #text(size: 1.2em)[
+       The control flow also includes `for` and `while` statement, how does `dynamo` handle them?
     ]
   ]
+
+  #only((2, 3))[
+    #only(2)[Let's see an example:]
+    #grid(
+     columns: 2,
+     column-gutter: 20mm,
+     [
+      ```py
+      @torch.compile
+      def toy_example(x, n):
+          for i in range(1, n + 1):
+              x = x * i
+          return x
+
+      def test():
+          x = torch.randn(10)
+          toy_example(x, 4)
+      ```
+     ],
+     [
+      #only(3)[
+        The Graph of `toy_example` is like this:
+        ```py
+        def forward(self, x : torch.Tensor):
+          mul = x * 1;  x = None
+          mul_1 = mul * 2;  mul = None
+          mul_2 = mul_1 * 3;  mul_1 = None
+          mul_3 = mul_2 * 4;  mul_2 = None
+          return (mul_3,)
+        ```
+      ]
+     ]
+    )
+  ]
+]
+
+#slide(
+  session: "Front End",
+  title: "dynamo"
+)[
+  We can summary dynamo like this:
+  #image("fig/dynamo_.png", fit: "contain", width: 100%, height: 85%)
+]
+
+#slide(
+  session: "Front End",
+  title: "AOTAutograd"
+)[
+
+  
+
 ]
