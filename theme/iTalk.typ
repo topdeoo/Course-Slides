@@ -1,6 +1,7 @@
 #import "@preview/pinit:0.1.2": *
 #import "@preview/polylux:0.3.1": *
 #import "@preview/diagraph:0.2.0": *
+#import "@preview/algo:0.3.3": algo, i, d, comment, code
 
 #let uni-colors = state("uni-colors", (:))
 #let uni-short-title = state("uni-short-title", none)

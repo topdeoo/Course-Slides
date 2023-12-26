@@ -830,7 +830,7 @@
   session: "Front End",
   title: "dynamo"
 )[
-  We can summary dynamo like this:
+  We can summarize dynamo like this:
   #image("fig/dynamo_.png", fit: "contain", width: 100%, height: 85%)
 ]
 
@@ -839,6 +839,189 @@
   title: "AOTAutograd"
 )[
 
-  
+   #only((1, 2, 3))[
+    Before `PyTorch` 2.0, we can capture the forward computation graph by `symbolic trace`
+
+    What about the backward?
+   ]
+
+   #only((2, 3))[
+
+    Before `PyTorch` 2.0, each operator has it forward and backward implementation
+
+    #only(3)[
+      ...But we #highlight(fill: rgb("#f2f1cf"))[can not do any optimization on the backward computation graph]
+
+    ]
+   ]
+
+    #only(4)[
+      So we a function to capture the backward computation graph which can be optimized
+
+      We call it `AOTAutograd` in `PyTorch` 2.0 
+    ]
+
+    #only((5, 6))[
+
+      #text(size: 1.3em)[What can `AOTAutograd` do?]
+
+      Ahead Of Time Auto Gradient (i.e. `AOTAutograd`) can do:
+
+      + capture the forward & backward computation graph
+      + #highlight[compile] the forward & backward computation graph with diffierent backends
+      + do optimization on the forward & backward computation graph
+
+      #only(6)[
+        The `compiler` here means:
+
+          Through the `AOTAutograd` interface, the operator in the computation graph would transform to `ATen & Prim` level from `torch` level.
+
+          (e.g `torch.sigmoid` $arrow.r$ `torch.aten.ops.sigmoid.default()` which is implmented by `C++`) 
+      ]
+    ]
+
+    #only(7)[
+      #text(size: 1.2em)[Why is it called AOTAutograd? ]
+      
+      AOTAutograd traces both forward and backward propagation in an Ahead-of-Time fashion.
+      
+      It caputure the forward & backward propagation graph before the function is actually executed.
+    ]
+]
+
+#slide(
+  session: "Front End",
+  title: "What does AOTAutograd do?"
+)[
+
+  We can summarize `AOTAutograd` like this:
+
+  #algo(
+    title: "AOTAutograd",
+    parameters: ("FXGraph",),
+    radius: 2pt,
+    row-gutter: 1.2em
+  )[
+    
+    #comment(inline: true)[
+      Generate the forward & backward computation graph
+    ]
+    $"joint_graph" arrow.l "torch.__dispatch__"("FXGraph")$\
+
+    #comment(inline: true)[
+      Partition the forward & backward computation graph
+    ]
+    $"forward, backward" arrow.l "partition_fn"("joinit_graph")$\
+
+    #comment(inline: true)[
+      Decompose the operator into more fine-grained opeartor
+    ]
+    $"forward, backward" arrow.l "decompositions"("forward, backward")$\
+
+    $"torch.autograd.Function" arrow.l "_compiler"("forward, backward")$
+  ]
 
 ]
+
+#slide(
+  session: "AOTAutograd",
+  title: "dispatch"
+)[
+
+  #text(size: 1.2em)[
+    All we need to know is that:
+
+    the `__dispatch__` will map high-level operator to a low-level operator like this:
+
+    #grid(
+      rows: 2,
+      row-gutter: .5em,
+      code(
+        row-gutter: 2pt,
+        line-numbers: false
+      )[
+        ```py
+        Tensor dot(const Tensor &self, const Tensor &other)
+        ```
+      ],
+      code(
+        line-numbers: false
+      )[
+        ```yaml
+        - func: dot(Tensor self, Tensor tensor) -> Tensor
+          variants: function, method
+          dispatch:
+            CPU: dot
+            CUDA: dot_cuda
+            MPS: dot_mps
+        ```
+      ]
+      
+    )
+  ]
+]
+
+#slide(
+  session: "AOTAutograd",
+  title: "partition graph"
+)[
+
+  #only(1)[
+    With `__dispatch__`, we can trace a joint graph (forward & backward graph):
+
+  ]
+
+  #only((1, 2, 3, 4))[
+    #image("fig/joint-graph.png", fit: "contain", width: 100%, height: 80%)
+  ]
+
+  #only(2)[
+    Now, we want to partition the joint graph into forward and backward graph.
+  ]
+
+  #only(3)[
+    How?
+  ]
+
+  #only(4)[
+    The general principle adopted is to minimize the memory requirement, we model it as a #pin(1)Max-Flow/Min-Cut problem #pin(2)
+
+    #pinit-highlight(1, 2)
+  ]
+]
+
+#slide(
+  session: "Front End",
+  title: "Summary"
+)[
+  #only(1)[#image("fig/Front-End.png", fit: "contain")]
+  #only(2)[
+    #grid(
+      columns: (35%, 70%),
+      [
+        ```py
+        model = nn.Sequential(
+          nn.Conv2d(16, 32, 3),
+          nn.BatchNorm2d(32),
+          nn.ReLU(),
+          ).cuda()
+        ```
+      ],
+      [
+        #image("fig/demo.png", fit: "contain")
+      ]
+    )
+  ]
+]
+
+#focus-slide()[
+  #set align(center + horizon)
+  #strong[Q & A]
+]
+
+// #slide(
+//   session: "Back End",
+//   title: "Backend Intro"
+// )[
+
+// ]
