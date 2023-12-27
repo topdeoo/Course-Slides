@@ -483,12 +483,13 @@
 
   #only((3, 4))[
     Let us see a example, when we have a control flow like this:
-      ```python
-      def forward(self, x):
-        if x.sum() < 0:
-            return x + 1
-        else:
-            return x - 1
+      ```py
+        def toy_example(x):
+          a = nn.Linear(1, 1)(x)
+          b = nn.Linear(1, 1)(x)
+          if x.sum() < 0:
+              return a + b
+          return a - b
       ```
       We can not capture the control flow in FX Graph
       
@@ -500,53 +501,209 @@
       Then what does `dynamo` do?
     ]
 
-    #only((5, 6))[
-      Let's see:
-      #grid(
-       columns: 2,
-       column-gutter: 5em,
-       text[
-        ```python
-        def forward(x):
+    // #only((5, 6))[
+    //   Let's see:
+    //   #grid(
+    //    columns: 2,
+    //    column-gutter: 5em,
+    //    text[
+    //     ```python
+    //     def forward(x):
+    //       if x.sum() < 0:
+    //           return x + 1
+    //       else:
+    //           return x - 1
+    //     ```
+    //     ],
+    //     grid(
+    //       columns: 1,
+    //       rows: 2,
+    //       row-gutter: 2em,
+    //       rect[
+    //         #only((5, 6))[
+    //           ```py
+    //           def forward(self, x: torch.Tensor):
+    //             sum_1 = x.sum(); x = None
+    //             lt = sum_1 < 0; sum_1 = None
+    //             return (lt, )
+    //           ```
+    //         ]
+    //       ],
+    //       rect[
+    //         #only((5, 6))[
+    //           ```py
+    //           def forward(self, x: torch.Tensor):
+    //             add = x + 1; x = None
+    //             return (add, )
+    //           ```
+    //         ]
+    //       ]
+    //     )
+    //   )
+    //   #only(6)[
+    //     #text(size: 1.2em)[
+    //       ...wait, Why there are only 2 computation graph?\
+    //       Where is the `else` branch?
+    //     ]
+    //   ]
+    // ]
+]
+
+#slide(
+  session: "Front End",
+  title: "Graph Break"
+)[
+
+  // #only(1)[
+  //   #grid(
+  //     columns: 2,
+  //     column-gutter: 10mm,
+  //     text[
+  //       ```py
+  //       def toy_example(x):
+  //         a = nn.Linear(1, 1)(x)
+  //         b = nn.Linear(1, 1)(x)
+  //         if x.sum() < 0:
+  //             return a + b
+  //         return a - b
+  //       ```
+  //   ],
+  //   text[
+  //     With `Guard`, `dynamo` can guarantee that if the tensor does not change, the computation graph will not change, so we do not need to compiler the `else` branch.
+
+
+  //     But... what if the tensor changes?
+  //   ]
+  //   ),
+  // ]
+
+  #only(1)[
+    let's see this example:
+  ]
+
+  #only((beginning:1, until: 6))[
+    #grid(
+     columns: 2,
+    column-gutter: 12mm,
+     [
+      #only((1, 2))[
+        ```py
+        def toy_example(x):
+          a = nn.Linear(1, 1)(x)
+          b = nn.Linear(1, 1)(x)
           if x.sum() < 0:
-              return x + 1
-          else:
-              return x - 1
+              return a + b
+          return a - b
         ```
-        ],
-        grid(
-          columns: 1,
-          rows: 2,
-          row-gutter: 2em,
-          rect[
-            #only((5, 6))[
-              ```py
-              def forward(self, x: torch.Tensor):
-                sum_1 = x.sum(); x = None
-                lt = sum_1 < 0; sum_1 = None
-                return (lt, )
-              ```
-            ]
-          ],
-          rect[
-            #only((5, 6))[
-              ```py
-              def forward(self, x: torch.Tensor):
-                add = x + 1; x = None
-                return (add, )
-              ```
-            ]
-          ]
-        )
-      )
+      ]
+      #only((3, 4, 5, 6))[
+        ```py
+        def compiled_toy_example(x):
+          a, b, lt = __compiled_fn_0(x)
+          if lt:
+              return __resume_at_30_1(b, x)
+          else:
+              return __resume_at_38_2(a, x)
+        ```
+      ]
+     ],
+     [
+      #only(1)[
+        `dynamo` here take an action called `Graph Break`
+
+        `toy_example()` would be compiled into 3 computation graph.
+      ]
+      #only(2)[
+        ```py
+        def compiled_toy_example(x):
+          a, b, lt = __compiled_fn_0(x)
+          if lt:
+              return __resume_at_30_1(b, x)
+          else:
+              return __resume_at_38_2(a, x)
+        ```
+        three function shows below:
+      ]
+      #only(3)[
+        before `if` statement:
+
+        ```py
+        def __compiled_fn_0(x):
+          a, b = nn.Linear(1, 1)(x), nn.Linear(1, 1)(x)
+          return x.sum() < 0:
+        ```
+      ]
+      #only(4)[
+        `if` branch:
+
+        ```py
+        def __resume_at_30_1(x):
+          goto if_next
+          a, b = nn.Linear(1, 1)(x), nn.Linear(1, 1)(x)
+          if x.sum() < 0:
+              label if_next
+              return a + b
+          return a - b
+        ```
+      ]
+      #only(5)[
+        `else` branch:
+
+        ```py
+        def __resume_at_38_2(x):
+          goto if_jump
+          a, b = nn.Linear(1, 1)(x), nn.Linear(1, 1)(x)
+          if x.sum() < 0:
+              b = a + b
+          label if_jump
+          return a - b
+        ```
+      ]
       #only(6)[
-        #text(size: 1.2em)[
-          ...wait, Why there are only 2 computation graph?\
-          Where is the `else` branch?
-        ]
+        At first, the function `__compiled_fn()` will be compiled, and we have the `lt` flag
+
+        Then `dynamo` will compile the `if` branch #highlight(fill: rgb("#f2f1cf"))[*or*] `else` branch according to the `lt` flag.
+
+      ]
+     ]
+    )
+  ]
+]
+
+#slide(
+  session: "Dynamic Compile",
+  title: "Dynamic Compile"
+)[
+
+  Let's consider a example:
+  #grid(
+    columns: (50%, 50%),
+    column-gutter: 1.5em,
+    [
+      A simple graph:
+      ```py
+      def forward(x, y):
+        return (x + y) * y
+      ```
+
+      Here the $x$, $y$ are tensors, which means it has its own shape, dtype, device, etc.
+    ],
+    [
+
+      #only((2, 3))[
+        Let's consider that somehow the $x$ tensor changes, such as $x arrow.r x^T$
+
+        Then the computation graph will change, and we need to re-compile the graph.
       ]
     ]
+  )
+  #only(3)[
+    The question is: how does `dynamo` know the tensor changes?
+    
+    (i.e. how does `dynamo` guard the tensor?)
+  ]
 ]
+
 
 #slide(
   session: "Front End",
@@ -654,127 +811,6 @@
           It will re-compile when all check failed.
         ]
       ]
-    )
-  ]
-]
-
-#slide(
-  session: "Front End",
-  title: "Graph Break"
-)[
-
-  #only(1)[
-    #grid(
-      columns: 2,
-      column-gutter: 10mm,
-      text[
-      ```python
-      def forward(self, x):
-        if x.sum() < 0:
-            return x + 1
-        else:
-            return x - 1
-      ```
-    ],
-    text[
-      With `Guard`, `dynamo` can guarantee that if the tensor does not change, the computation graph will not change, so we do not need to compiler the `else` branch.
-
-
-      But... what if the tensor changes?
-    ]
-    ),
-  ]
-
-  #only(2)[
-    let's see this example:
-  ]
-
-  #only((beginning:2, until: 7))[
-    #grid(
-     columns: 2,
-    column-gutter: 12mm,
-     [
-      #only((2, 3))[
-        ```py
-        def toy_example(x):
-          a = nn.Linear(1, 1)(x)
-          b = nn.Linear(1, 1)(x)
-          if x.sum() < 0:
-              return a + b
-          return a - b
-        ```
-      ]
-      #only((4, 5, 6, 7))[
-        ```py
-        def compiled_toy_example(x):
-          a, b, lt = __compiled_fn_0(x)
-          if lt:
-              return __resume_at_30_1(b, x)
-          else:
-              return __resume_at_38_2(a, x)
-        ```
-      ]
-     ],
-     [
-      #only(2)[
-        `dynamo` here take an action called `Graph Break`
-
-        `toy_example()` would be compiled into 3 computation graph.
-      ]
-      #only(3)[
-        ```py
-        def compiled_toy_example(x):
-          a, b, lt = __compiled_fn_0(x)
-          if lt:
-              return __resume_at_30_1(b, x)
-          else:
-              return __resume_at_38_2(a, x)
-        ```
-        three function shows below:
-      ]
-      #only(4)[
-        before `if` statement:
-
-        ```py
-        def __compiled_fn_0(x):
-          a, b = nn.Linear(1, 1)(x), nn.Linear(1, 1)(x)
-          return x.sum() < 0:
-        ```
-      ]
-      #only(5)[
-        `if` branch:
-
-        ```py
-        def __resume_at_30_1(x):
-          goto if_next
-          a, b = nn.Linear(1, 1)(x), nn.Linear(1, 1)(x)
-          if x.sum() < 0:
-              label if_next
-              return a + b
-          return a - b
-        ```
-      ]
-      #only(6)[
-        `else` branch:
-
-        ```py
-        def __resume_at_38_2(x):
-          goto if_jump
-          a, b = nn.Linear(1, 1)(x), nn.Linear(1, 1)(x)
-          if x.sum() < 0:
-              b = a + b
-          label if_jump
-          return a - b
-        ```
-      ]
-      #only(7)[
-        At first, the function `__compiled_fn()` will be compiled, and we have the `lt` flag
-
-        Then `dynamo` will compile the `if` branch #pin(1)*or*#pin(2) `else` branch according to the `lt` flag.
-
-        #pinit-highlight(1, 2)
-      ]
-     ]
     )
   ]
 ]
