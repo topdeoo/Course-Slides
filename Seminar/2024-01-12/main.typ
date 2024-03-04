@@ -13,7 +13,7 @@
 #title-slide(
   title: "Learning-based Multi-Start ILS for PMSCP",
   authors: (name: "凌典", email: "virgiling7@gmail.com"),
-  logo: image("fig/nenu-logo-title.png", width: 30%),
+  logo: image("../template/fig/nenu-logo-title.png", width: 30%),
   institution: "Northeast Normal University",
   date: "2024-01-12"
 )
