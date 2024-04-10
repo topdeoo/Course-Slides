@@ -72,16 +72,18 @@
     columns: (1fr, 1.2fr),
     column-gutter: 0.5em,
     [
+        #only(1)[
         + $M_1$ 初始化
         + 当 $t = 1 , dots $
           + $L_t = g(M_t, z_t)$
           + $L_t^+ = { (x_i, f(x_i)) |forall x_i in L_t}$
           + $M_{t + 1} = h(M_t, L^+_t, z^(prime)_t)$
+        ]
         #only(2)[
-          #image("fig/SA.png", fit: "contain", width: 100%, height: 55%)
+          #image("fig/SA.png", fit: "contain", width: 100%)
         ]
         #only(3)[
-          #image("fig/GA.png", fit: "contain", width: 80%, height: 55%)
+          #image("fig/GA.png", fit: "contain", width: 100%)
         ]
     ],
     [
