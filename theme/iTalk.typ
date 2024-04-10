@@ -26,7 +26,7 @@
     header: none,
     footer: none,
   )
-  set text(size: 22pt, font: "Menlo")
+  set text(size: 22pt, font: "LXGW WenKai GB")
   show footnote.entry: set text(size: .6em)
 
   uni-progress-bar.update(progress-bar)
