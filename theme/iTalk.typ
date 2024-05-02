@@ -242,3 +242,20 @@
 
   logic.polylux-slide(content)
 }
+
+#let toc-slide() = {
+  let background-color = rgb("#0C6291")
+
+    let header = {
+    set align(top)
+    set text(fill: white, size: 1.5em)
+    pad(top: 0.3em)[
+      #text(style: "italic", "目录")
+    ]
+  }
+
+  set page(fill: background-color, margin: 1em, header: header) if background-color != none
+
+  set text(fill: white, size: 1.5em)
+  logic.polylux-slide(align(horizon, polylux-outline()))
+}
