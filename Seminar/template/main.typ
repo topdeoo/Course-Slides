@@ -13,12 +13,12 @@
 #let argmin = math.op("arg min", limits: true)
 
 #title-slide(
-  title: "LNS",
+  title: "TODO",
   authors: (
     name: "凌典",
     email: "virgiling7@gmail.com"
   ),
   logo: image("../template/fig/nenu-logo-title.png", width: 30%),
   institution: "Northeast Normal University",
-  date: "2024-03-07"
+  date: "TODO"
 )

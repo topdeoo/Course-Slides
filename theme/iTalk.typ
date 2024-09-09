@@ -27,6 +27,8 @@
     footer: none,
   )
   set text(size: 22pt, font: "LXGW WenKai GB Screen")
+  set text(font: "Monaco Nerd Font", lang: "en")
+
   show footnote.entry: set text(size: .6em)
 
   uni-progress-bar.update(progress-bar)
