@@ -13,7 +13,7 @@
 #let argmin = math.op("arg min", limits: true)
 
 #title-slide(
-  title: text("A Semi-Exact Algorithm for Quickly Computing a Maximum Weight  Clique in Large Sparse Graphs", size: 0.8em),
+  title: text("A Semi-Exact Algorithm for Quickly Computing a Maximum Weight Clique in Large Sparse Graphs", size: 0.8em),
   authors: (
     name: "凌典",
     email: "virgiling7@gmail.com"
@@ -30,16 +30,6 @@
   给定一个点加权图 $G=<V, E, W>$
     
   期望找到一个团 $C$，使得 $sum_(v in C) w(v)$ 最大，其中，团 $C$ 是 $G$ 的一个完全子图。
-  
-  // #only((2, 3))[
-  //   最大加权团问题的上界，我们可以通过图着色得出：
-
-  //   由于一个合法的图着色是对图 $G$ 的顶点集 $V(G)$ 一个划分 ${A_1, A_2, dots, A_k}$，每个划分都是一个独立集#footnote("独立集中的顶点两两不相邻")，于是，任意一个团最多只有一种颜色的一个顶点
-  // ]
-  // #only(3)[
-
-  //   我们在下面给出如何寻找最大加权团的上界
-  // ]
 ]
 
 #slide(
@@ -275,7 +265,7 @@
   ]
 
   #only((2, 3))[
-    于是，我们可以通过这个规则，来去除一些不满足这个性质的顶点，也就是不在 #pin(3)最优解中的顶点 #pin(4)
+    于是，我们可以通过这个规则，来去除一些不满足这个性质的顶点，也就是不在 #pin(3)最优解中的顶点#pin(4)
 
     #pinit-highlight(3, 4)
   ]
@@ -293,9 +283,102 @@
     由于 $C$ 是一个完全图，因此如果 $v in C$，那么 $forall u in N(v), u in C$，所以我们可以通过计算 $N[v]$ 的权重来得到 $C$ 的上界#footnote[因为 $|C| lt.eq |N[v]|$]。
   ]
 
-  #only((6, 7))[
+  #only(6)[
+    给定一个顶点 $v$，我们假设 
     
+    $u^* = argmax_(u in N(v))w(u)$，那么对包含这个顶点的任意一个团 $C$，存在两种情况，要么包含 $u^*$，要么不包含。
+
+    那么这个团的权值可以被计算如下：
+        $
+      w(C) = cases(
+        w(N[v]) - w(u^*) "                      if" u^* in.not C,
+        w(v) + w(u^*) + w(N(v) sect N(u^*)) " otherwise"
+      )
+    $
+
+    于是，$"UB"_1$ 就是 $w(C)$ 的最坏情况，也就是这两个中的较大值
   ]
 
+  #only(7)[  
+    更一般的，最大加权团问题的上界，我们可以通过图着色得出：
+
+    由于一个合法的图着色是对图 $G$ 的顶点集 $V(G)$ 一个划分 ${A_1, A_2, dots, A_k}$，每个划分都是一个独立集#footnote("独立集中的顶点两两不相邻")，于是，任意一个团最多只有一种颜色的一个顶点
+  ]
+
+  #only((8, 9))[
+    由于一个合法的图着色是对图 $G$ 的顶点集 $V(G)$ 一个划分 ${A_1, A_2, dots, A_k}$，每个划分都是一个独立集，于是，任意一个团最多只有一种颜色的一个顶点
+
+    那么，我们可以得出另一个上界：
+
+    $
+      "UB"_c (G) = sum^k_(i=1)max_(u in A_i){w(u)}
+    $
+
+    也就是每个划分中最大的权值之和
+
+    我们将其与 $"UB"_2$ 联合，可以知道，任意一个包含 $v$ 的团 $C$，其权值的可能如下：
+  ]
+
+  #only(10)[
+
+    $
+      w(C) = cases(
+        "UB"_c (G[N[v]\\{u^*}]) "                         if " u^* in.not C,
+        w(v) + w(u^*) + "UB"_c (G[N(v) sect N(u^*)]) " otherwise"
+      )
+    $
+    
+    
+    于是，对于顶点 $v in V$，我们有：
+
+    $
+      "UB"_2 = w(v) + max{"UB"_c (G[N(v)\\{u^*}]), w(u^*) + "UB"_c (G[N(v) sect N(u^*)])} 
+    $
+
+    其中 $G[N(v)]$ 表示顶点集为 $N(v)$ 的 $G$ 的子图]
 ]
+
+#slide(
+  title: "Reduction",
+  session: "Algorithm"
+)[
+  通过上述的上界，由于其计算代价不同，于是，我们的规约算法如下：
+
+  #algo(
+    title: "ReduceGraph",
+    parameters: ($G$, $C$, $"level"$),
+    row-gutter: 11pt
+  )[
+    for $v in V$ do#i\
+      if $"UB"_"level" lt.eq w(C)$ then#i\
+        $"rmQueue" arrow.l "rmQueue" union {v}$#d#d\
+    while $"rmQueue" eq.not emptyset.rev$ do#i\
+      $u arrow.l "rmQueue.head()"$\
+      $"rmFrom"(G, u)$\
+      for $v in N(u) sect V$ do#i\
+        if $"UB"_"level" lt.eq w(C)$ then#i\
+          $"rmQueue" arrow.l "rmQueue" union {v}$#d#d\
+    return $G$
+  ]
+]
+
+#slide(
+  title: "Experiment",
+  session: "Experiment"
+)[
+  #set align(center)
+  #only(1)[
+    #image("fig/instance.png")
+  ]
+  #only(2)[
+    #image("fig/instance2.png")
+  ]
+  #only(3)[
+    #image("fig/instance2-time.png")
+  ]
+  #only(4)[
+    #image("fig/result.png")
+  ]
+]
+
 
