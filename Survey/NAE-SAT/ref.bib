@@ -2,7 +2,8 @@
   title = {Parameterization of ({{Partial}}) {{Maximum Satisfiability}} above {{Matching}} in a {{Variable-Clause Graph}}},
   author = {Alferov, Vasily and Bliznets, Ivan and Brilliantov, Kirill},
   date = {2024-03-24},
-  journaltitle = {AAAI},
+  journaltitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  shortjournal = {AAAI},
   volume = {38},
   number = {8},
   pages = {7918--7925},
@@ -85,6 +86,7 @@
   author = {Cai, Shaowei and Luo, Chuan and Su, Kaile},
   date = {2015-11},
   journaltitle = {The Computer Journal},
+  shortjournal = {The Computer Journal},
   volume = {58},
   number = {11},
   pages = {2864--2875},
@@ -156,6 +158,40 @@
   keywords = {ccfInfo: CCF-B DATE,citationNumber: 154}
 }
 
+@article{gamarnikPerformanceSequentialLocal2017,
+  title = {Performance of {{Sequential Local Algorithms}} for the {{Random NAE-}}\${{K}}\$-{{SAT Problem}}},
+  author = {Gamarnik, David and Sudan, Madhu},
+  date = {2017-01},
+  journaltitle = {SIAM Journal on Computing},
+  shortjournal = {SIAM J. Comput.},
+  volume = {46},
+  number = {2},
+  pages = {590--619},
+  issn = {0097-5397, 1095-7111},
+  doi = {10.1137/140989728},
+  url = {https://epubs.siam.org/doi/10.1137/140989728},
+  urldate = {2024-10-11},
+  abstract = {We formalize the class of “sequential local algorithms" and show that these algorithms fail to find satisfying assignments on random instances of the “Not-All-Equal-\$K\$-SAT” (NAE-\$K\$-SAT) problem if the number of message passing iterations is bounded by a function moderately growing in the number of variables and if the clause-to-variable ratio is above \$(1+o\_K(1))\{2\textasciicircum\{K-1\}\textbackslash over K\}\textbackslash ln\textasciicircum 2 K\$ for sufficiently large \$K\$. Sequential local algorithms are those that iteratively set variables based on some local information and/or local randomness and then recurse on the reduced instance. Our model captures some weak abstractions of natural algorithms such as Survey Propagation (SP)-guided as well as Belief Propagation (BP)-guided decimation algorithms---two widely studied message-passing--based algorithms---when the number of message-passing rounds in these algorithms is restricted to be growing only moderately with the number of variables. The approach underlying our paper is based on an intricate geometry of th...},
+  langid = {english}
+}
+
+@article{goemansImprovedApproximationAlgorithms1995,
+  title = {Improved Approximation Algorithms for Maximum Cut and Satisfiability Problems Using Semidefinite Programming},
+  author = {Goemans, Michel X. and Williamson, David P.},
+  date = {1995-11},
+  journaltitle = {Journal of the ACM},
+  shortjournal = {J. ACM},
+  volume = {42},
+  number = {6},
+  pages = {1115--1145},
+  issn = {0004-5411, 1557-735X},
+  doi = {10.1145/227683.227684},
+  url = {https://dl.acm.org/doi/10.1145/227683.227684},
+  urldate = {2024-10-14},
+  abstract = {We present randomized approximation algorithms for the maximum cut (MAX CUT) and maximum 2-satisfiability (MAX 2SAT) problems that always deliver solutions of expected value at least .87856 times the optimal value. These algorithms use a simple and elegant technique that randomly rounds the solution to a nonlinear programming relaxation. This relaxation can be interpreted both as a semidefinite program and as an eigenvalue minimization problem. The best previously known approximation algorithms for these problems had perfc\textasciitilde rmance guarantees of \textasciitilde{} for MAX CUT and \textasciitilde{} for MAX 2SAT. Slight extensions of our analysis lead to a .79607-approximation algorithm for the maximum directed cut problem (MAX DICUT) and a .758-approximation algorithm for MAX SAT, where the best previously known approxim ation algorithms had performance guarantees of \textasciitilde{} and \textasciitilde, respectively. Our algorithm gives the first substantial progress in approximating MAX CUT in nearly twenty years, and represents the first use of :semidefinite programming in the design of approximation algorithms.},
+  langid = {english}
+}
+
 @book{knuthSatisfiablility2018,
   title = {Satisfiablility},
   author = {Knuth, Donald Ervin and Knuth, Donald Ervin},
@@ -188,6 +224,7 @@
   url = {http://arxiv.org/abs/2011.14270},
   urldate = {2024-10-10},
   abstract = {In a broad class of sparse random constraint satisfaction problems(CSP), deep heuristics from statistical physics predict that there is a condensation phase transition before the satisfiability threshold, governed by one-step replica symmetry breaking(1RSB). In fact, in random regular k-NAE-SAT, which is one of such random CSPs, it was verified \textbackslash cite\{ssz22\} that its free energy is well-defined and the explicit value follows the 1RSB prediction. However, for any model of sparse random CSP, it has been unknown whether the solution space indeed condenses on O(1) clusters according to the 1RSB prediction. In this paper, we give an affirmative answer to this question for the random regular k-NAE-SAT model. Namely, we prove that with probability bounded away from zero, most of the solutions lie inside a bounded number of solution clusters whose sizes are comparable to the scale of the free energy. Furthermore, we establish that the overlap between two independently drawn solutions concentrates precisely at two values. Our proof is based on a detailed moment analysis of a spin system, which has an infinite spin space that encodes the structure of solution clusters. We believe that our method is applicable to a broad range of random CSPs in the 1RSB universality class.},
+  langid = {american},
   pubstate = {prepublished},
   keywords = {ccfInfo: CCF-C ?ED:100000,citationNumber: undefined,Condensed Matter - Disordered Systems and Neural Networks,Mathematical Physics,Mathematics - Mathematical Physics,Mathematics - Probability}
 }
@@ -205,6 +242,22 @@
   langid = {english},
   pubstate = {prepublished},
   keywords = {ccfInfo:,citationNumber: undefined,Computer Science - Cryptography and Security,Computer Science - Logic in Computer Science}
+}
+
+@inproceedings{odonnellOptimalSdpAlgorithm2008,
+  title = {An Optimal Sdp Algorithm for Max-Cut, and Equally Optimal Long Code Tests},
+  booktitle = {Proceedings of the Fortieth Annual {{ACM}} Symposium on {{Theory}} of Computing},
+  author = {O'Donnell, Ryan and Wu, Yi},
+  date = {2008-05-17},
+  pages = {335--344},
+  publisher = {ACM},
+  location = {Victoria British Columbia Canada},
+  doi = {10.1145/1374376.1374425},
+  url = {https://dl.acm.org/doi/10.1145/1374376.1374425},
+  urldate = {2024-10-11},
+  eventtitle = {{{STOC}} '08: {{Symposium}} on {{Theory}} of {{Computing}}},
+  isbn = {978-1-60558-047-0},
+  langid = {english}
 }
 
 @article{porschenXSATNAESATLinear,
@@ -253,6 +306,7 @@
   author = {Xian, Aiyong and Zhu, Kaiyuan and Zhu, Daming and Pu, Lianrong and Liu, Hong},
   date = {2017-01},
   journaltitle = {Theoretical Computer Science},
+  shortjournal = {Theoretical Computer Science},
   volume = {657},
   pages = {54--63},
   issn = {03043975},
@@ -286,6 +340,7 @@
   author = {Zhang, Jiawei and Ye, Yinyu and Han, Qiaoming},
   date = {2004-08},
   journaltitle = {Discrete Applied Mathematics},
+  shortjournal = {Discrete Applied Mathematics},
   volume = {142},
   number = {1-3},
   pages = {133--149},
