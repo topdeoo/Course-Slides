@@ -79,7 +79,7 @@ $
 
 / 超图（Hypergraph）: 超图（Hypergraph）是一种广义的图，其中边（称为超边）可以连接任意数量的顶点，而不仅仅是两个顶点。
 
-显然 @sec:set-splitting 中对于字迹簇 $cal(F)$ 与全集 $S$ 可以直接对应到超图 $cal(H) = <V, E> arrow.r.l.double <S, cal(F)>$
+显然 @sec:set-splitting 中对于子集簇 $cal(F)$ 与全集 $S$ 可以直接对应到超图 $cal(H) = <V, E> arrow.r.l.double <S, cal(F)>$
 
 于是，问题可以变为一个 2-color 问题，即只用两种颜色如何将超图完全着色。
 
@@ -88,10 +88,12 @@ $
 暂时未找到 NAE-SAT 的进展，目前可能原因在于：
 
 + NAE-SAT 的应用场景少
-+ 其他未知的原因
 
 业内#footnote[业内，但本文引用的大多数论文都是Math与Physics分类的，CS分类也是TCS]大多数的研究都集中在 NAE-SAT 的两个变种上，我们将在
 @sec:k-sat, @sec:max-k-sat 中介绍。
+
+在 @el-kadiQuantumApproximateOptimisation2024 中提到，NAE-SAT 在计算复杂性的规约上有着重要的作用，
+这或许也能解释，为什么关于 NAE-SAT 的均是理论研究。
 
 // == 应用场景
 
@@ -101,6 +103,8 @@ $
 
 / _Definition 3_: 给定一个 SAT 问题，要求每个子句 $c_i$ 中至少有一个文字为真且至少有一个文字为假，并且每个子句中恰好有 $k$ 个文字
 \
+
+=== Theory
 
 在这个问题上的理论研究显然比一般的 NAE-SAT 要多，例如 @dingSatisfiabilityThresholdRandom2013, @slyLocalGeometryNAESAT2023, @namOnestepReplicaSymmetry2023, @gamarnikPerformanceSequentialLocal2017 等，
 然而，在这些文章之中，@dingSatisfiabilityThresholdRandom2013 更集中于探讨 _random d-regular k-NAE-SAT_；
@@ -113,6 +117,18 @@ $
 
 @dingSatisfiabilityThresholdRandom2013 的工作明确建立了一个阈值 $d_* equiv d_*(k)$，并证明，当 $d < d_*$ 时，随机生成的 CNF 几乎总是可满足的；而当 $d > d_*$ 时，随机生成的 CNF 几乎总是不可满足的。如果阈值 $d_*$ 恰好为整数，我们表明该问题是可满足的，且其概率远离 0 和 1。
 
+=== Non-Theory
+
+@el-kadiQuantumApproximateOptimisation2024 是为数不多的非理论的工作，QAOA@farhiQuantumApproximateOptimization2014 在最大割问题中早有应用，论文中举例用的就是最大割问题，此问题在 @sec:max-cut 中介绍。
+
+然而，@el-kadiQuantumApproximateOptimisation2024 也并未提及 k-NAE-SAT 的实际应用，算法是通过魔改了 WalkSATlm@caiImprovingWalkSATEffective2015 得到的，称为 WalkSATm2b2，如@fig:walksatm2b2 所示。
+
+使用的实例为随机生成的 $k in {3, dots, 10}$ 的 $2500$ 个 NAE-SAT 实例(保证了一定有解)。
+
+#figure(
+  image("walksatm2b2.png", width: 50%), 
+  caption: "WalkSATm2b2 算法示意"
+)<fig:walksatm2b2>
 
 = MAX NAE-SAT<sec:max-k-sat>
 
@@ -131,7 +147,7 @@ Max Cut，最大割问题，其定义如下：
 
 对于最大割问题的近似算法，在 @odonnellOptimalSdpAlgorithm2008, @goemansImprovedApproximationAlgorithms1995 中均有介绍。
 
-而如果我们为边设置权重，就能得到 weighted-MAX-CUT 问题。
+而如果我们为边设置权重，就能得到 _weighted-MAX-CUT_ 问题。
 
 == MAX Set Splitting
 
@@ -139,8 +155,6 @@ Max Cut，最大割问题，其定义如下：
 与 @sec:max-cut 中提及的文章工作类似。
 
 == MAX k-NAE-SAT
-
-=== Theory
 
 在理论方面，@brakensiekMysteriesMAXNAESAT2024 的工作主要是确定了 $k gt.eq 3$ 中，算法的最优近似比，见 @tbl:ratios
 
@@ -157,10 +171,6 @@ Max Cut，最大割问题，其定义如下：
    [$k gt.eq 4$],[$1 - 1/(2^(k -1))$],[Random Assignment]
   )
 )<tbl:ratios>
-
-=== Non-Theory
-
-@el-kadiQuantumApproximateOptimisation2024 是为数不多的非理论的工作
 
 = Conclusion<sec:conclusion>
 
