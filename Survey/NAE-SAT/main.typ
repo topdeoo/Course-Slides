@@ -39,6 +39,7 @@
 \
 / _Definition 2_: 给定一个 SAT 问题，要求每个子句 $c_i$ 中至少有一个文字为真且至少有一个文字为假 （也就是说一个子句中不可能所有变量均相等）
 \
+注意到，NAE-SAT 是对称的，即，我们翻转赋值 $phi$ 中的每个赋值后得到 $phi^prime$，$phi^prime$ 仍然是问题的一个成真赋值。
 
 在文章 @porschenXSATNAESATLinear 中， 其提及了两个典型的问题：
 
@@ -73,11 +74,9 @@ $
 
 最后我们得到赋值为 $phi$，赋值为真的变量为集合 $X_1$ 中的元素，否则为 $X_2$ 中的元素
 
-注意到，NAE-SAT 是对称的，即，我们翻转 $phi$ 中的每个赋值后得到 $phi^prime$，$phi^prime$ 仍然是问题的一个成真赋值。
-
 == Hypergraph bicolorability<sec:hypr-bicolor>
 
-/ 超图（Hypergraph）: 超图（Hypergraph）是一种广义的图，其中边（称为超边）可以连接任意数量的顶点，而不仅仅是两个顶点。
+/ 超图（Hypergraph）: 一种广义的图，其中边（称为超边）可以连接任意数量的顶点，而不仅仅是两个顶点。
 
 显然 @sec:set-splitting 中对于子集簇 $cal(F)$ 与全集 $S$ 可以直接对应到超图 $cal(H) = <V, E> arrow.r.l.double <S, cal(F)>$
 
@@ -102,7 +101,6 @@ $
 = NAE-k-SAT / k-NAE-SAT<sec:k-sat>
 
 / _Definition 3_: 给定一个 SAT 问题，要求每个子句 $c_i$ 中至少有一个文字为真且至少有一个文字为假，并且每个子句中恰好有 $k$ 个文字
-\
 
 === Theory
 
@@ -121,13 +119,24 @@ $
 
 @el-kadiQuantumApproximateOptimisation2024 是为数不多的非理论的工作，QAOA@farhiQuantumApproximateOptimization2014 在最大割问题中早有应用，论文中举例用的就是最大割问题，此问题在 @sec:max-cut 中介绍。
 
-然而，@el-kadiQuantumApproximateOptimisation2024 也并未提及 k-NAE-SAT 的实际应用，算法是通过魔改了 WalkSATlm@caiImprovingWalkSATEffective2015 得到的，称为 WalkSATm2b2，如@fig:walksatm2b2 所示。
+然而，@el-kadiQuantumApproximateOptimisation2024 也并未提及 k-NAE-SAT 的实际应用。
+由于 QAOA 本质上是一个近似优化算法，因此没办法保证一定获得最优解，于是，衡量 QAOA 的效果是通过成功率(success ratio)的，如@fig:qaoa-success-ratio 所示：
+
+#figure(
+  image("success-ratio-qaoa.png", width: 50%),
+)<fig:qaoa-success-ratio>
+
+最后，文章将 QAOA 与传统算法WalkSATlm@caiImprovingWalkSATEffective2015 与魔改 WalkSATlm 得到的 WalkSATm2b2，如@fig:walksatm2b2 所示，进行对比（在这里只对比了中位运行时间）：
+
+#figure(
+  image("median-running-time-qaoa.png", width: 50%),
+)
 
 使用的实例为随机生成的 $k in {3, dots, 10}$ 的 $2500$ 个 NAE-SAT 实例(保证了一定有解)。
 
 #figure(
-  image("walksatm2b2.png", width: 50%), 
-  caption: "WalkSATm2b2 算法示意"
+  image("walksatm2b2.png", width: 50%),
+  caption: "WalkSATm2b2 算法示意",
 )<fig:walksatm2b2>
 
 = MAX NAE-SAT<sec:max-k-sat>
@@ -162,16 +171,16 @@ Max Cut，最大割问题，其定义如下：
   kind: table,
   caption: "Optimal approximation ratios for MAX NAE-{k}-SAT.",
   table(
-   align: center,
-   stroke: .5pt,
-   columns: (1fr, 1fr, 1fr),
-   [MAX NAE-{$k$}-SAT], [Optimal ratios], [Algorithm],
-   [$k = 2$],[$alpha_(G W) approx 0.8786$],[Goemans-Williamson@goemansImprovedApproximationAlgorithms1995],
-   [$k = 3$],[$approx 0.9089$],[@brakensiekMysteriesMAXNAESAT2024],
-   [$k gt.eq 4$],[$1 - 1/(2^(k -1))$],[Random Assignment]
-  )
+    align: center,
+    stroke: .5pt,
+    columns: (1fr, 1fr, 1fr),
+    [MAX NAE-{$k$}-SAT], [Optimal ratios], [Algorithm],
+    [$k = 2$], [$alpha_(G W) approx 0.8786$], [Goemans-Williamson@goemansImprovedApproximationAlgorithms1995],
+    [$k = 3$], [$approx 0.9089$], [@brakensiekMysteriesMAXNAESAT2024],
+    [$k gt.eq 4$], [$1 - 1 / (2^(k -1))$], [Random Assignment],
+  ),
 )<tbl:ratios>
 
-= Conclusion<sec:conclusion>
+// = Conclusion<sec:conclusion>
 
 #bibliography("ref.bib")
