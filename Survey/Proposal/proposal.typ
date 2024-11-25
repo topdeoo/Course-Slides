@@ -518,30 +518,61 @@ $<eight-queen>
 #pagebreak()
 = 研究设计（针对研究问题，详细阐述本选题的研究内容、基本思路或总体框架、理论基础、具体研究方案等）
 
+== 基于局部搜索的算法
+
 本研究设计了一种启发式算法求解带基数约束的 SAT 问题。算法包括以下几个关键步骤：初始化、局部搜索、约束传播和终止条件。
 为了方便叙述，我们假设基数约束的集合为 $"card"$。
 
 我们的算法框架如 @fig:cardsat 所示，具体的实现过程有如下具体的规则和方法：
 
 + *预处理阶段：* 在预处理阶段，我们可以快速得出某些一定成真或一定成假的变量，将其作为单元子句加入到 CNF 中，并维护基数约束集合 $"card"$，从而使得问题规模减小。
-+ *初始化阶段：*
-+  
++ *初始化阶段：* 通过形如 @fig:up 所示的广义单元传播算法，通过对预处理得到的单元子句进行单元传播，并通过随机方法生成一个赋值。
++ *局部搜索：* 我们采用启发式搜索策略，框架如@fig:cardsat 所示，通过翻转变量来逐步优化解的质量。约束处理阶段，我们确保在每次变量翻转后，解仍然满足基数约束。在这一阶段，我们详细介绍：
+  - 如何翻转变量
+  具体而言，算法通过评估每个变量翻转对当前赋值的影响，选择最有可能改善当前解的变量进行翻转。
+  我们首先对子句进行打分，对于基数约束而言，我们可以为子句分配合适的权重，假定子句 $c_i$ 的权重 $w_i = sum_(l in c_i) l$，我们每次选择权重较小的子句，因为这些子句能够产生更多的单元子句，从而能够加快传播速度。
+  接着，对于选中的子句，我们通过最小冲突（最大增益）的评估方式来选择翻转的变量。
+  在基数约束中，对于一个变量的评分，我们可以写为 $"score"(x_i) = w_1 times "翻转后成真的子句数" - w_2 times (sum_(x_j in "card")x_j - r)$， 其中 $r$ 为@eqt:pb-format 中的约束，综合考虑基数约束与传统 SAT 的评估方式，并通过 `lmake` 的方式来打破平局，选择更优的变量进行翻转。
 
+  - 如何进行约束传播
+  约束传播是局部搜索中的一个关键步骤，它通过传播单元子句来更新变量的赋值。
+  具体而言，当一个变量被翻转后，我们需要检查所有包含该变量的子句，并更新这些子句的状态，直到没有新的单元子句产生为止，在这个过程中，我们会维护基数约束的集合 $"card"$，以确保基数约束的集合 $"card"$ 在传播过程中始终保持一致性。
 
-1. 初始化阶段，我们随机生成一个满足基数约束的初始解。局部搜索阶段，我们采用启发式搜索策略，通过翻转变量来逐步优化解的质量。约束处理阶段，我们确保在每次变量翻转后，解仍然满足基数约束。终止条件设定为达到预定的迭代次数或找到满足所有约束的解。
+  - 如何跳出局部最优
+  当搜索陷入局部最优时，常用的策略为对搜索过程施加随机扰动，使得解通过邻域跳出局部最优；或使用重启策略，即在搜索过程中定期重新初始化搜索状态。以期望在新的初始状态下找到更好的解。
+  在 SAT 中，常用的重启策略是使用 Luby 序列重启，然而 Luby 序列并非在所有的 SAT 实例上表现都较好，反而，对于不同的 SAT 实例，重启的序列都大多都不相同。
+  然而，在重启时，部分解的质量对搜索的效率与时间均十分重要。因此，在重启时需要考虑的不仅仅只有随机扰动，还需要保留那些历史过程中表现较好的变量，将其固定在赋值中。换而言之，我们可以通过从历史解决方案中提取的信息来评估部分赋值的质量，获取良好的部分赋值并作为新的部分解@Li2023FGA。
 
 #figure(
   kind: "algorithm",
   supplement: [算法],
-  pseudocode-list(booktabs: true, numbered-title: [Framework])[
+  pseudocode-list(booktabs: true, numbered-title: [Unit Propagation])[
+    + *while* $exists$ unassigned variables *do*
+      + *if* $exists$ generalized hard unit clauses *then*
+        + pick a generalized hard unit clause randomly and \
+          perform generalized unit propagation
+      + *else*
+        + $x arrow.l$ pick an unassigned variable randomly
+        + assign $x$ with a random value $v$, simplify $cal(F)$ accordingly
+    + *end*
+  ],
+  caption: "广义单元传播",
+)<up>
+
+
+#figure(
+  kind: "algorithm",
+  supplement: [算法],
+  pseudocode-list(booktabs: true, numbered-title: [Local Search])[
+    + $cal(F), "card" arrow.l$ Pre-processing($cal(F)$)
     + *while* elapsed time < cutoff *do*
-      + $sigma arrow.l $ a partial assignment with previous solutions
-      + $sigma arrow.l $ complete $sigma$ with unit propagation 
+      + $sigma^prime arrow.l $ a partial assignment with previous solutions
+      + $sigma arrow.l $ Unit Propagation($cal(F), sigma^prime$)
       + *while* not_improved $lt $ N *do*
         + *if* $sigma "SAT" cal(F)$ *then*
           + *return* $sigma$
-        + $C arrow.l $ an unsat clause chosen with $max$ score
-        + *if* $exists x in C "with" max "score"(x)$ *then*
+        + $c_i arrow.l $ an unsat clause chosen with $max$ $w_i$
+        + *if* $exists x in c_i "with" max "score"(x)$ *then*
           + $v arrow.l x$
         + *else*
           + $v arrow.l cases(
@@ -553,24 +584,63 @@ $<eight-queen>
       + *end*
     + *end*
   ],
-  caption: "WalkSATlm 算法",
+  caption: "局部搜索算法框架",
 )<cardsat>
 
-在 中，启发式策略用于指导变量的翻转，
-具体而言，算法通过评估每个变量翻转对当前赋值的影响，选择最有可能改善当前解的变量进行翻转。
-在算法设计时，通常采用以下策略：
+== 基于 CDCL 的精确算法
 
-+ 最小冲突或最大增益：选择翻转后能减少最多冲突子句数量的变量(选择翻转后能增加最多满足子句数量的变量)，通过减少冲突(增加满足)的子句数，从而更快的获得解。
+我们可以设计一个基于冲突驱动子句学习（Conflict-Driven Clause Learning, CDCL）的精确算法，如@fig:cdcl 所示。该算法在处理基数约束问题时，通过结合传统的布尔约束传播与基数约束的特性，实现了高效的求解过程。
 
-+ 加权启发式：对于基数约束而言，我们可以为子句分配合适的权重，从而评估变量的翻转效果。
++ *初始化与预处理：* 这一阶段与局部搜索的处理方式一致，主要目的是通过识别和处理单元子句来减小问题的规模。此外，我们还可以引入子句加权技术，通过为不同子句分配不同的权重，来优先处理那些对求解影响较大的子句。
 
-+ 动态调整：根据搜索的进展动态调整启发式策略。例如，在搜索初期可能更倾向于减少冲突子句，而在接近满足的赋值时，可能更倾向于增加满足子句。
++ *单元传播：* 我们可以在CDCL的布尔约束传播（Boolean Constraint Propagation, BCP）阶段，同时进行单元子句的传播。此时，BCP不仅会对传统的布尔子句进行检查和更新，还会对 $"card"$ 中的基数约束进行检查。通过这种方式，算法能够及时发现并处理与基数约束相关的冲突，确保求解过程的正确性。此外，我们还可以引入动态子句学习（Dynamic Clause Learning）技术，根据当前求解状态动态调整学习子句的生成策略，以提高算法的灵活性和适应性。
 
++ *冲突分析与原因归结：* 当算法检测到冲突时，需要进行冲突分析与原因归结。这一步骤的目的是通过分析冲突的根源，生成合适的学习子句，并回跳到适当的决策层级。在处理基数约束问题时，我们可以针对基数约束与传统的子句约束设置不同形式的学习子句。例如，对于基数约束，可以生成包含多个变量的学习子句，而对于传统的布尔子句，则可以生成简单的单变量学习子句。
 
-在局部搜索中，如何快速检测并跳出局部最优解同样是算法设计的重点。
-我们可以采用多启动策略，即在搜索过程中定期重新初始化搜索状态，以期望在新的初始状态下找到更好的解。
-最常用的方法是使用 Luby 序列重启，然而 Luby 序列并不是在所有的 SAT 实例上表现都较好。因此，我们也可以通过从历史解决方案中提取的信息来评估部分赋值的质量，获取良好的部分赋值并作为新的部分解@Li2023FGA，其框架如 @fig:cardsat 所示。
++ *决策：* 在决策阶段，算法采用了一种结合了VSIDS（Variable State Independent Decaying Sum）中的LBD（Literal Block Distance）评分与基数约束评估函数的策略。具体来说，算法会根据LBD评分来选择下一个决策变量，同时结合基数约束的评估函数来调整决策的优先级。这种策略能够使CDCL算法在处理基数约束问题时，更好地平衡基数约束与传统子句约束之间的冲突。
 
++ *子句管理与剪枝：* 随着求解过程的进行，算法会生成大量的学习子句。为了保持算法的效率，我们需要对这些子句进行有效的管理和剪枝，我们采用子句老化（Clause Aging）技术，通过为子句分配老化时间，来动态调整子句的优先级，定期删除那些对求解过程影响较小的子句。
+#figure(
+  kind: "algorithm",
+  supplement: [算法],
+  pseudocode-list(booktabs: true, numbered-title: [CDCL])[
+    + initialize assignment $sigma = emptyset.rev$
+    + $sigma, cal(F), "card" arrow.l$ Pre-processing($cal(F)$)
+    + *while* true *do*
+      + *if* all variables assigned *then*
+        + *return* SAT
+      + $"conflict" arrow.l $ bcp($sigma, "card"$)
+      + *if* $"conflict" eq.not emptyset.rev$ *then*
+        + $"level", "learnt clause" arrow.l $ analyze($"conflict"$)
+        + $"clauses" arrow.l "clauses" union "learnt clause"$ with clause aging
+        + backtrack($"level"$)
+      + *else*
+        + $sigma arrow.l$ $sigma union$ decide($sigma$)
+
+  ],
+  caption: "CDCL 算法",
+)<cdcl>
+
+== 与 CDCL 算法结合
+
+更近一步的，我们可以设计一个基于 CDCL 与局部搜索的混合算法，在@fig:mixcdcl 中的决策阶段，我们可以将 CDCL 与局部搜索进行结合，当 CDCL 求解到一定的程度时，即当只有 $gamma$ 个变量未赋值，我们将 CDCL 的部分解作为局部搜索的预处理结果，并通过局部搜索补全解，从而更快速的找到最终赋值；
+否则，对于一般的情况，我们依然采用 CDCL 中的 VSIDS 方法进行评估。
+
+#figure(
+  kind: "algorithm",
+  supplement: [算法],
+  pseudocode-list(booktabs: true, numbered-title: [CDCL with SLS])[
+    + initialize assignment $sigma = emptyset.rev$
+    + $sigma, cal(F), "card" arrow.l$ Pre-processing($cal(F)$)
+    + *while* true *do*
+    + \/\/ bcp and resolve conflict
+      + *if* $|sigma| gt.eq gamma$ *then*
+        + $sigma arrow.l $ Local Search($cal(F), sigma$) @fig:cardsat
+      + *else*
+        + $sigma arrow.l$ $sigma union$ decide($sigma$)
+  ],
+  caption: "CDCL 与 SLS 的混合算法",
+)<mixcdcl>
 
 #pagebreak()
 = 进度安排（按照时间顺序，就研究的进度做出具体的规划）
@@ -596,36 +666,36 @@ $<eight-queen>
   date: datetime.today(),
 )
 
-// #pagebreak()
+#pagebreak()
 
-// #review_conclusion(
-//   (
-//     (
-//       name: "张三",
-//       title: "讲师",
-//       workplace: "东北师范大学",
-//     ),
-//     (
-//       name: "李四",
-//       title: "教授",
-//       workplace: "北京大学",
-//     ),
-//     (
-//       name: "王五",
-//       title: "教授",
-//       workplace: "复旦大学",
-//     ),
-//     (
-//       name: "赵六",
-//       title: "副教授",
-//       workplace: "南京大学",
-//     ),
-//     (
-//       name: "孙七",
-//       title: "讲师",
-//       workplace: "浙江大学",
-//     ),
-//   ),
-//   // image("sign.svg", height: 2em),
-//   date: datetime.today(),
-// )
+#review_conclusion(
+  (
+    (
+      name: "刘淑华",
+      title: "教授",
+      workplace: "东北师范大学",
+    ),
+    (
+      name: "张靖波",
+      title: "副教授",
+      workplace: "东北师范大学",
+    ),
+    (
+      name: "齐妙",
+      title: "副教授",
+      workplace: "东北师范大学",
+    ),
+    (
+      name: "王艺源",
+      title: "副教授",
+      workplace: "东北师范大学",
+    ),
+    (
+      name: "张邦佐",
+      title: "副教授",
+      workplace: "东北师范大学",
+    ),
+  ),
+  // image("sign.svg", height: 2em),
+  date: datetime.today(),
+)
