@@ -226,7 +226,7 @@
   ]
   assert(bibliography != none, message: "bibliography 函数不能为空")
 
-  set text(lang: "zh", size: font-size.小四, font: font-family.宋体)
+  set text(lang: "en", size: font-size.小四, font: font-family.宋体)
 
   bibliography(
     title: none,
@@ -236,9 +236,9 @@
 }
 
 // [!FIXME] 增加 dx, dy 偏移量参数，使得签名能够放在恰当的位置上
-#let sign(sign_image: none, date: datetime) = {
+#let sign(sign_image, date: datetime) = {
   place(right + bottom)[
-    指导教师签字：#h(5em) #box(
+    指导教师签字：#box(
       sign_image, height: 1.15em
     ) \
     #datetime-display-cn-declare(date)
@@ -373,7 +373,7 @@ WalkSAT @MarquesSilva1999GRASPAS 作为最具影响力的SLS算法之一，在�
 然而，随着问题规模的增加，特别是在处理高阶随机 k-SAT 实例($k gt 3$)时，其性能急剧下降。针对这一局限性，研究者们提出了一系列改进算法：sattime@Li2012SatisfyingVF 在随机7-SAT实例上表现出色，probSAT@Balint2012ChoosingPD 在随机5-SAT实例上具有优势，而CCASat@Cai2013LocalSF 则在两种情况下都保持较好性能。
 特别值得一提的是 WalkSATlm @caiImprovingWalkSATEffective2015 的改进，它通过引入基于 lmake 的平局打破机制@Cai2013ComprehensiveS @Cai2014ScoringFB @Prestwich2005RandomWW，在随机5-SAT和7-SAT实例上都实现了性能突破，超越了当时最先进的求解器，与完备求解器相比，WalkSATlm 在处理大型实例时通常提供更快的解决方案，尽管它不能保证找到解。
 
-== 基数约束及其编码
+== 基数约束及其编码<sec:encoding>
 
 在探索高效的SAT求解方法的过程中，研究者们逐渐注意到许多实际问题中蕴含着特殊的约束结构。
 例如在约束满足问题（CSP）中，基数约束用于管理满足特定条件的变量数量，是建模现实世界问题的关键，例如资源分配和任务调度。这些约束在整合到布尔可满足性问题（SAT）求解器时，其与伪布尔（PB）约束的关系尤为重要@HandbookSatisfiability2009。
@@ -618,7 +618,7 @@ $<eight-queen>
         + $sigma arrow.l$ $sigma union$ decide($sigma$)
 
   ],
-  caption: "CDCL 算法",
+  caption: "带基数约束的 CDCL 算法",
 )<cdcl>
 
 == 与 CDCL 算法结合
@@ -639,8 +639,14 @@ $<eight-queen>
       + *else*
         + $sigma arrow.l$ $sigma union$ decide($sigma$)
   ],
-  caption: "CDCL 与 SLS 的混合算法",
+  caption: "带基数约束的 CDCL 与 SLS 的混合算法",
 )<mixcdcl>
+
+== 对比算法
+
+我们考虑了@sec:encoding 中提到的编码技术，对于任意一个带有基数约束的 SAT 问题，我们都可以将其转化为纯子句约束的 SAT 问题。换句话说，我们可以使用当前已有的 SAT 求解器（例如 Kissat，CaDiCaL@BiereFallerFazekasFleuryFroleyksPollitt-SAT-Competition-2024-solvers）作为基准求解器进行对比实验，以评估我们提出的算法的性能。
+
+更进一步地，在@eqt:pb-format 中，我们将基数约束的 SAT 问题转化为了 PB 约束，因此，我们还可以使用 PB 求解器（例如 RoundingSAT@Elffers2018DivideAC）进行对比实验，以评估我们提出的算法的性能。
 
 #pagebreak()
 = 进度安排（按照时间顺序，就研究的进度做出具体的规划）
@@ -661,41 +667,41 @@ $<eight-queen>
 
 
 //! 在这里填入自己的签名文件路径
-#sign(
-  // image("sign.svg", height: 2em),
-  date: datetime.today(),
-)
+// #sign(
+//   image("sign.jpg", height: 3em),
+//   date: datetime.today(),
+// )
 
-#pagebreak()
+// #pagebreak()
 
-#review_conclusion(
-  (
-    (
-      name: "刘淑华",
-      title: "教授",
-      workplace: "东北师范大学",
-    ),
-    (
-      name: "张靖波",
-      title: "副教授",
-      workplace: "东北师范大学",
-    ),
-    (
-      name: "齐妙",
-      title: "副教授",
-      workplace: "东北师范大学",
-    ),
-    (
-      name: "王艺源",
-      title: "副教授",
-      workplace: "东北师范大学",
-    ),
-    (
-      name: "张邦佐",
-      title: "副教授",
-      workplace: "东北师范大学",
-    ),
-  ),
-  // image("sign.svg", height: 2em),
-  date: datetime.today(),
-)
+// #review_conclusion(
+//   (
+//     (
+//       name: "刘淑华",
+//       title: "教授",
+//       workplace: "东北师范大学",
+//     ),
+//     (
+//       name: "张靖波",
+//       title: "副教授",
+//       workplace: "东北师范大学",
+//     ),
+//     (
+//       name: "齐妙",
+//       title: "副教授",
+//       workplace: "东北师范大学",
+//     ),
+//     (
+//       name: "王艺源",
+//       title: "副教授",
+//       workplace: "东北师范大学",
+//     ),
+//     (
+//       name: "张邦佐",
+//       title: "副教授",
+//       workplace: "东北师范大学",
+//     ),
+//   ),
+//   // image("sign.svg", height: 2em),
+//   date: datetime.today(),
+// )
