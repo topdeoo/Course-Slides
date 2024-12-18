@@ -1,4 +1,4 @@
-#import "@preview/pinit:0.1.2": *
+#import "@preview/pinit:0.2.2": *
 #import "@preview/polylux:0.3.1": *
 #import "@preview/diagraph:0.2.0": *
 #import "@preview/algo:0.3.3": algo, i, d, comment, code
@@ -69,7 +69,7 @@
           }
         }
       )
-      set text(size: .8em)
+      set text(size: .8em, font: "LXGW WenKai GB Screen")
       grid(
         columns: (1fr,) * calc.min(authors.len(), 3),
         column-gutter: 1em,
