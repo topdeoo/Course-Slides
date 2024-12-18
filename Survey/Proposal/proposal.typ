@@ -238,8 +238,8 @@
 // [!FIXME] 增加 dx, dy 偏移量参数，使得签名能够放在恰当的位置上
 #let sign(sign_image, date: datetime) = {
   place(right + bottom)[
-    指导教师签字：#box(
-      sign_image, height: 1.15em
+    指导教师签字：#h(1em) #box(
+      sign_image, height: 2em, baseline: 20%
     ) \
     #datetime-display-cn-declare(date)
     #h(3em)
@@ -668,7 +668,7 @@ $<eight-queen>
 
 //! 在这里填入自己的签名文件路径
 // #sign(
-//   image("sign.jpg", height: 3em),
+//   image("sign.jpg", height: 2em),
 //   date: datetime.today(),
 // )
 
